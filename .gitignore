@@ -1,3 +1,9 @@
 # Project exclude paths
 /target/
 /.idea/
+test_run/logs/
+test_run/saves/
+/.vscode/
+test_run/options.txt
+test_run/usercache.json
+test_run/saves/MCP Development World/level.dat

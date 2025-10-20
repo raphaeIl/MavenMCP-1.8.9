@@ -13,193 +13,197 @@ import net.minecraft.world.chunk.ChunkPrimer;
 
 public class MapGenCaves extends MapGenBase
 {
-    protected void func_180703_a(long p_180703_1_, int p_180703_3_, int p_180703_4_, ChunkPrimer p_180703_5_, double p_180703_6_, double p_180703_8_, double p_180703_10_)
+    // Carves a spherical/elliptical "room" at the given world position
+    protected void carveRoom(long seed, int chunkX, int chunkZ, ChunkPrimer primer, double roomCenterX, double roomCenterY, double roomCenterZ)
     {
-        this.func_180702_a(p_180703_1_, p_180703_3_, p_180703_4_, p_180703_5_, p_180703_6_, p_180703_8_, p_180703_10_, 1.0F + this.rand.nextFloat() * 6.0F, 0.0F, 0.0F, -1, -1, 0.5D);
+        this.carveTunnel(seed, chunkX, chunkZ, primer, roomCenterX, roomCenterY, roomCenterZ, GenConfig.ROOM_RADIUS_BASE + this.rand.nextFloat() * GenConfig.ROOM_RADIUS_VARIATION, 0.0F, 0.0F, -1, -1, GenConfig.ROOM_VERTICAL_SCALE);
     }
 
-    protected void func_180702_a(long p_180702_1_, int p_180702_3_, int p_180702_4_, ChunkPrimer p_180702_5_, double p_180702_6_, double p_180702_8_, double p_180702_10_, float p_180702_12_, float p_180702_13_, float p_180702_14_, int p_180702_15_, int p_180702_16_, double p_180702_17_)
+    // Carves a meandering tunnel through the chunk, optionally branching
+    protected void carveTunnel(long seed, int chunkX, int chunkZ, ChunkPrimer primer, double currentX, double currentY, double currentZ, float tunnelRadius, float yaw, float pitch, int currentStep, int maxSteps, double verticalScale)
     {
-        double d0 = (double)(p_180702_3_ * 16 + 8);
-        double d1 = (double)(p_180702_4_ * 16 + 8);
-        float f = 0.0F;
-        float f1 = 0.0F;
-        Random random = new Random(p_180702_1_);
+        double chunkCenterX = (double)(chunkX * 16 + 8);
+        double chunkCenterZ = (double)(chunkZ * 16 + 8);
+        float yawChange = 0.0F;
+        float pitchChange = 0.0F;
+        Random random = new Random(seed);
 
-        if (p_180702_16_ <= 0)
+        if (maxSteps <= 0)
         {
-            int i = this.range * 16 - 16;
-            p_180702_16_ = i - random.nextInt(i / 4);
+            int max = this.range * 16 - 16;
+            maxSteps = max - random.nextInt(max / GenConfig.TUNNEL_LENGTH_DIVISOR);
         }
 
-        boolean flag2 = false;
+        boolean isRootSegment = false;
 
-        if (p_180702_15_ == -1)
+        if (currentStep == -1)
         {
-            p_180702_15_ = p_180702_16_ / 2;
-            flag2 = true;
+            currentStep = maxSteps / 2;
+            isRootSegment = true;
         }
 
-        int j = random.nextInt(p_180702_16_ / 2) + p_180702_16_ / 4;
+        int branchStep = random.nextInt(maxSteps / 2) + maxSteps / 4;
 
-        for (boolean flag = random.nextInt(6) == 0; p_180702_15_ < p_180702_16_; ++p_180702_15_)
+        boolean makeWide = random.nextInt(GenConfig.WIDE_TUNNEL_CHANCE_DENOMINATOR) == 0;
+        for (; currentStep < maxSteps; ++currentStep)
         {
-            double d2 = 1.5D + (double)(MathHelper.sin((float)p_180702_15_ * (float)Math.PI / (float)p_180702_16_) * p_180702_12_ * 1.0F);
-            double d3 = d2 * p_180702_17_;
-            float f2 = MathHelper.cos(p_180702_14_);
-            float f3 = MathHelper.sin(p_180702_14_);
-            p_180702_6_ += (double)(MathHelper.cos(p_180702_13_) * f2);
-            p_180702_8_ += (double)f3;
-            p_180702_10_ += (double)(MathHelper.sin(p_180702_13_) * f2);
+            double sinValue = MathHelper.sin((float)currentStep * (float)Math.PI / (float)maxSteps);
+            double horizontalRadius = GenConfig.TUNNEL_RADIUS_BASE + (double)(sinValue * tunnelRadius * GenConfig.TUNNEL_RADIUS_VARIATION_MULTIPLIER);
+            double verticalRadius = horizontalRadius * verticalScale;
+            float cosPitch = MathHelper.cos(pitch);
+            float sinPitch = MathHelper.sin(pitch);
+            currentX += (double)(MathHelper.cos(yaw) * cosPitch);
+            currentY += (double)sinPitch;
+            currentZ += (double)(MathHelper.sin(yaw) * cosPitch);
 
-            if (flag)
+            if (makeWide)
             {
-                p_180702_14_ = p_180702_14_ * 0.92F;
+                pitch = pitch * GenConfig.WIDE_TUNNEL_PITCH_DECAY;
             }
             else
             {
-                p_180702_14_ = p_180702_14_ * 0.7F;
+                pitch = pitch * GenConfig.NORMAL_TUNNEL_PITCH_DECAY;
             }
 
-            p_180702_14_ = p_180702_14_ + f1 * 0.1F;
-            p_180702_13_ += f * 0.1F;
-            f1 = f1 * 0.9F;
-            f = f * 0.75F;
-            f1 = f1 + (random.nextFloat() - random.nextFloat()) * random.nextFloat() * 2.0F;
-            f = f + (random.nextFloat() - random.nextFloat()) * random.nextFloat() * 4.0F;
+            pitch = pitch + pitchChange * 0.1F;
+            yaw += yawChange * 0.1F;
+            pitchChange = pitchChange * 0.9F;
+            yawChange = yawChange * 0.75F;
+            pitchChange = pitchChange + (random.nextFloat() - random.nextFloat()) * random.nextFloat() * 2.0F;
+            yawChange = yawChange + (random.nextFloat() - random.nextFloat()) * random.nextFloat() * 4.0F;
 
-            if (!flag2 && p_180702_15_ == j && p_180702_12_ > 1.0F && p_180702_16_ > 0)
+            if (!isRootSegment && currentStep == branchStep && tunnelRadius > GenConfig.BRANCH_RADIUS_THRESHOLD && maxSteps > 0)
             {
-                this.func_180702_a(random.nextLong(), p_180702_3_, p_180702_4_, p_180702_5_, p_180702_6_, p_180702_8_, p_180702_10_, random.nextFloat() * 0.5F + 0.5F, p_180702_13_ - ((float)Math.PI / 2F), p_180702_14_ / 3.0F, p_180702_15_, p_180702_16_, 1.0D);
-                this.func_180702_a(random.nextLong(), p_180702_3_, p_180702_4_, p_180702_5_, p_180702_6_, p_180702_8_, p_180702_10_, random.nextFloat() * 0.5F + 0.5F, p_180702_13_ + ((float)Math.PI / 2F), p_180702_14_ / 3.0F, p_180702_15_, p_180702_16_, 1.0D);
+                this.carveTunnel(random.nextLong(), chunkX, chunkZ, primer, currentX, currentY, currentZ, random.nextFloat() * GenConfig.BRANCH_RADIUS_VARIATION + GenConfig.BRANCH_RADIUS_BASE, yaw - ((float)Math.PI / 2F), pitch / 3.0F, currentStep, maxSteps, 1.0D);
+                this.carveTunnel(random.nextLong(), chunkX, chunkZ, primer, currentX, currentY, currentZ, random.nextFloat() * GenConfig.BRANCH_RADIUS_VARIATION + GenConfig.BRANCH_RADIUS_BASE, yaw + ((float)Math.PI / 2F), pitch / 3.0F, currentStep, maxSteps, 1.0D);
                 return;
             }
 
-            if (flag2 || random.nextInt(4) != 0)
+            if (isRootSegment || random.nextInt(GenConfig.TUNNEL_GENERATION_CHANCE_DENOMINATOR) != 0)
             {
-                double d4 = p_180702_6_ - d0;
-                double d5 = p_180702_10_ - d1;
-                double d6 = (double)(p_180702_16_ - p_180702_15_);
-                double d7 = (double)(p_180702_12_ + 2.0F + 16.0F);
+                double deltaXFromCenter = currentX - chunkCenterX;
+                double deltaZFromCenter = currentZ - chunkCenterZ;
+                double remaining = (double)(maxSteps - currentStep);
+                double maxDistance = (double)(tunnelRadius + 2.0F + 16.0F);
 
-                if (d4 * d4 + d5 * d5 - d6 * d6 > d7 * d7)
+                if (deltaXFromCenter * deltaXFromCenter + deltaZFromCenter * deltaZFromCenter - remaining * remaining > maxDistance * maxDistance)
                 {
                     return;
                 }
 
-                if (p_180702_6_ >= d0 - 16.0D - d2 * 2.0D && p_180702_10_ >= d1 - 16.0D - d2 * 2.0D && p_180702_6_ <= d0 + 16.0D + d2 * 2.0D && p_180702_10_ <= d1 + 16.0D + d2 * 2.0D)
+                if (currentX >= chunkCenterX - GenConfig.CARVE_BOUNDS_OFFSET - horizontalRadius * GenConfig.CARVE_BOUNDS_MULTIPLIER && currentZ >= chunkCenterZ - GenConfig.CARVE_BOUNDS_OFFSET - horizontalRadius * GenConfig.CARVE_BOUNDS_MULTIPLIER && currentX <= chunkCenterX + GenConfig.CARVE_BOUNDS_OFFSET + horizontalRadius * GenConfig.CARVE_BOUNDS_MULTIPLIER && currentZ <= chunkCenterZ + GenConfig.CARVE_BOUNDS_OFFSET + horizontalRadius * GenConfig.CARVE_BOUNDS_MULTIPLIER)
                 {
-                    int k2 = MathHelper.floor_double(p_180702_6_ - d2) - p_180702_3_ * 16 - 1;
-                    int k = MathHelper.floor_double(p_180702_6_ + d2) - p_180702_3_ * 16 + 1;
-                    int l2 = MathHelper.floor_double(p_180702_8_ - d3) - 1;
-                    int l = MathHelper.floor_double(p_180702_8_ + d3) + 1;
-                    int i3 = MathHelper.floor_double(p_180702_10_ - d2) - p_180702_4_ * 16 - 1;
-                    int i1 = MathHelper.floor_double(p_180702_10_ + d2) - p_180702_4_ * 16 + 1;
+                    int minX = MathHelper.floor_double(currentX - horizontalRadius) - chunkX * 16 - 1;
+                    int maxX = MathHelper.floor_double(currentX + horizontalRadius) - chunkX * 16 + 1;
+                    int minY = MathHelper.floor_double(currentY - verticalRadius) - 1;
+                    int maxY = MathHelper.floor_double(currentY + verticalRadius) + 1;
+                    int minZ = MathHelper.floor_double(currentZ - horizontalRadius) - chunkZ * 16 - 1;
+                    int maxZ = MathHelper.floor_double(currentZ + horizontalRadius) - chunkZ * 16 + 1;
 
-                    if (k2 < 0)
+                    if (minX < 0)
                     {
-                        k2 = 0;
+                        minX = 0;
                     }
 
-                    if (k > 16)
+                    if (maxX > 16)
                     {
-                        k = 16;
+                        maxX = 16;
                     }
 
-                    if (l2 < 1)
+                    if (minY < GenConfig.MIN_Y_BOUND)
                     {
-                        l2 = 1;
+                        minY = GenConfig.MIN_Y_BOUND;
                     }
 
-                    if (l > 248)
+                    if (maxY > GenConfig.MAX_Y_BOUND)
                     {
-                        l = 248;
+                        maxY = GenConfig.MAX_Y_BOUND;
                     }
 
-                    if (i3 < 0)
+                    if (minZ < 0)
                     {
-                        i3 = 0;
+                        minZ = 0;
                     }
 
-                    if (i1 > 16)
+                    if (maxZ > 16)
                     {
-                        i1 = 16;
+                        maxZ = 16;
                     }
 
-                    boolean flag3 = false;
+                    boolean intersectsWater = false;
 
-                    for (int j1 = k2; !flag3 && j1 < k; ++j1)
+                    for (int scanX = minX; !intersectsWater && scanX < maxX; ++scanX)
                     {
-                        for (int k1 = i3; !flag3 && k1 < i1; ++k1)
+                        for (int scanZ = minZ; !intersectsWater && scanZ < maxZ; ++scanZ)
                         {
-                            for (int l1 = l + 1; !flag3 && l1 >= l2 - 1; --l1)
+                            for (int scanY = maxY + 1; !intersectsWater && scanY >= minY - 1; --scanY)
                             {
-                                if (l1 >= 0 && l1 < 256)
+                                if (scanY >= 0 && scanY < 256)
                                 {
-                                    IBlockState iblockstate = p_180702_5_.getBlockState(j1, l1, k1);
+                                    IBlockState state = primer.getBlockState(scanX, scanY, scanZ);
 
-                                    if (iblockstate.getBlock() == Blocks.flowing_water || iblockstate.getBlock() == Blocks.water)
+                                    if (state.getBlock() == Blocks.flowing_water || state.getBlock() == Blocks.water)
                                     {
-                                        flag3 = true;
+                                        intersectsWater = true;
                                     }
 
-                                    if (l1 != l2 - 1 && j1 != k2 && j1 != k - 1 && k1 != i3 && k1 != i1 - 1)
+                                    if (scanY != minY - 1 && scanX != minX && scanX != maxX - 1 && scanZ != minZ && scanZ != maxZ - 1)
                                     {
-                                        l1 = l2;
+                                        scanY = minY;
                                     }
                                 }
                             }
                         }
                     }
 
-                    if (!flag3)
+                    if (!intersectsWater)
                     {
-                        BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
+                        BlockPos.MutableBlockPos mutableSurfacePos = new BlockPos.MutableBlockPos();
 
-                        for (int j3 = k2; j3 < k; ++j3)
+                        for (int carveX = minX; carveX < maxX; ++carveX)
                         {
-                            double d10 = ((double)(j3 + p_180702_3_ * 16) + 0.5D - p_180702_6_) / d2;
+                            double normX = ((double)(carveX + chunkX * 16) + 0.5D - currentX) / horizontalRadius;
 
-                            for (int i2 = i3; i2 < i1; ++i2)
+                            for (int carveZ = minZ; carveZ < maxZ; ++carveZ)
                             {
-                                double d8 = ((double)(i2 + p_180702_4_ * 16) + 0.5D - p_180702_10_) / d2;
-                                boolean flag1 = false;
+                                double normZ = ((double)(carveZ + chunkZ * 16) + 0.5D - currentZ) / horizontalRadius;
+                                boolean topSurfaceExposed = false;
 
-                                if (d10 * d10 + d8 * d8 < 1.0D)
+                                if (normX * normX + normZ * normZ < GenConfig.ELLIPSOID_CARVE_THRESHOLD)
                                 {
-                                    for (int j2 = l; j2 > l2; --j2)
+                                    for (int carveY = maxY; carveY > minY; --carveY)
                                     {
-                                        double d9 = ((double)(j2 - 1) + 0.5D - p_180702_8_) / d3;
+                                        double normY = ((double)(carveY - 1) + 0.5D - currentY) / verticalRadius;
 
-                                        if (d9 > -0.7D && d10 * d10 + d9 * d9 + d8 * d8 < 1.0D)
+                                        if (normY > GenConfig.ELLIPSOID_CARVE_Y_THRESHOLD && normX * normX + normY * normY + normZ * normZ < GenConfig.ELLIPSOID_CARVE_THRESHOLD)
                                         {
-                                            IBlockState iblockstate1 = p_180702_5_.getBlockState(j3, j2, i2);
-                                            IBlockState iblockstate2 = (IBlockState)Objects.firstNonNull(p_180702_5_.getBlockState(j3, j2 + 1, i2), Blocks.air.getDefaultState());
+                                            IBlockState currentState = primer.getBlockState(carveX, carveY, carveZ);
+                                            IBlockState stateAbove = (IBlockState)Objects.firstNonNull(primer.getBlockState(carveX, carveY + 1, carveZ), Blocks.air.getDefaultState());
 
-                                            if (iblockstate1.getBlock() == Blocks.grass || iblockstate1.getBlock() == Blocks.mycelium)
+                                            if (currentState.getBlock() == Blocks.grass || currentState.getBlock() == Blocks.mycelium)
                                             {
-                                                flag1 = true;
+                                                topSurfaceExposed = true;
                                             }
 
-                                            if (this.func_175793_a(iblockstate1, iblockstate2))
+                                            if (this.canReplaceBlockForCave(currentState, stateAbove))
                                             {
-                                                if (j2 - 1 < 10)
+                                                if (carveY - 1 < GenConfig.LAVA_DEPTH_THRESHOLD)
                                                 {
-                                                    p_180702_5_.setBlockState(j3, j2, i2, Blocks.lava.getDefaultState());
+                                                    primer.setBlockState(carveX, carveY, carveZ, Blocks.lava.getDefaultState());
                                                 }
                                                 else
                                                 {
-                                                    p_180702_5_.setBlockState(j3, j2, i2, Blocks.air.getDefaultState());
+                                                    primer.setBlockState(carveX, carveY, carveZ, Blocks.air.getDefaultState());
 
-                                                    if (iblockstate2.getBlock() == Blocks.sand)
+                                                    if (stateAbove.getBlock() == Blocks.sand)
                                                     {
-                                                        p_180702_5_.setBlockState(j3, j2 + 1, i2, iblockstate2.getValue(BlockSand.VARIANT) == BlockSand.EnumType.RED_SAND ? Blocks.red_sandstone.getDefaultState() : Blocks.sandstone.getDefaultState());
+                                                        primer.setBlockState(carveX, carveY + 1, carveZ, stateAbove.getValue(BlockSand.VARIANT) == BlockSand.EnumType.RED_SAND ? Blocks.red_sandstone.getDefaultState() : Blocks.sandstone.getDefaultState());
                                                     }
 
-                                                    if (flag1 && p_180702_5_.getBlockState(j3, j2 - 1, i2).getBlock() == Blocks.dirt)
+                                                    if (topSurfaceExposed && primer.getBlockState(carveX, carveY - 1, carveZ).getBlock() == Blocks.dirt)
                                                     {
-                                                        blockpos$mutableblockpos.set(j3 + p_180702_3_ * 16, 0, i2 + p_180702_4_ * 16);
-                                                        p_180702_5_.setBlockState(j3, j2 - 1, i2, this.worldObj.getBiomeGenForCoords(blockpos$mutableblockpos).topBlock.getBlock().getDefaultState());
+                                                        mutableSurfacePos.set(carveX + chunkX * 16, 0, carveZ + chunkZ * 16);
+                                                        primer.setBlockState(carveX, carveY - 1, carveZ, this.worldObj.getBiomeGenForCoords(mutableSurfacePos).topBlock.getBlock().getDefaultState());
                                                     }
                                                 }
                                             }
@@ -209,7 +213,7 @@ public class MapGenCaves extends MapGenBase
                             }
                         }
 
-                        if (flag2)
+                        if (isRootSegment)
                         {
                             break;
                         }
@@ -219,48 +223,49 @@ public class MapGenCaves extends MapGenBase
         }
     }
 
-    protected boolean func_175793_a(IBlockState p_175793_1_, IBlockState p_175793_2_)
+    // Determines if a block can be replaced by cave air/lava, considering the block above
+    protected boolean canReplaceBlockForCave(IBlockState current, IBlockState blockAbove)
     {
-        return p_175793_1_.getBlock() == Blocks.stone ? true : (p_175793_1_.getBlock() == Blocks.dirt ? true : (p_175793_1_.getBlock() == Blocks.grass ? true : (p_175793_1_.getBlock() == Blocks.hardened_clay ? true : (p_175793_1_.getBlock() == Blocks.stained_hardened_clay ? true : (p_175793_1_.getBlock() == Blocks.sandstone ? true : (p_175793_1_.getBlock() == Blocks.red_sandstone ? true : (p_175793_1_.getBlock() == Blocks.mycelium ? true : (p_175793_1_.getBlock() == Blocks.snow_layer ? true : (p_175793_1_.getBlock() == Blocks.sand || p_175793_1_.getBlock() == Blocks.gravel) && p_175793_2_.getBlock().getMaterial() != Material.water))))))));
+        return current.getBlock() == Blocks.stone ? true : (current.getBlock() == Blocks.dirt ? true : (current.getBlock() == Blocks.grass ? true : (current.getBlock() == Blocks.hardened_clay ? true : (current.getBlock() == Blocks.stained_hardened_clay ? true : (current.getBlock() == Blocks.sandstone ? true : (current.getBlock() == Blocks.red_sandstone ? true : (current.getBlock() == Blocks.mycelium ? true : (current.getBlock() == Blocks.snow_layer ? true : (current.getBlock() == Blocks.sand || current.getBlock() == Blocks.gravel) && blockAbove.getBlock().getMaterial() != Material.water))))))));
     }
 
     /**
      * Recursively called by generate()
      */
-    protected void recursiveGenerate(World worldIn, int chunkX, int chunkZ, int p_180701_4_, int p_180701_5_, ChunkPrimer chunkPrimerIn)
+    protected void recursiveGenerate(World worldIn, int chunkX, int chunkZ, int baseChunkX, int baseChunkZ, ChunkPrimer chunkPrimer)
     {
-        int i = this.rand.nextInt(this.rand.nextInt(this.rand.nextInt(15) + 1) + 1);
+        int caveStartCount = this.rand.nextInt(this.rand.nextInt(this.rand.nextInt(GenConfig.MAX_CAVE_COUNT_BASE) + 1) + 1);
 
-        if (this.rand.nextInt(7) != 0)
+        if (this.rand.nextInt(GenConfig.CAVE_SPAWN_CHANCE_DENOMINATOR) != 0)
         {
-            i = 0;
+            caveStartCount = 0;
         }
 
-        for (int j = 0; j < i; ++j)
+        for (int startIndex = 0; startIndex < caveStartCount; ++startIndex)
         {
-            double d0 = (double)(chunkX * 16 + this.rand.nextInt(16));
-            double d1 = (double)this.rand.nextInt(this.rand.nextInt(120) + 8);
-            double d2 = (double)(chunkZ * 16 + this.rand.nextInt(16));
-            int k = 1;
+            double startX = (double)(chunkX * 16 + this.rand.nextInt(16));
+            double startY = (double)this.rand.nextInt(this.rand.nextInt(120) + 8);
+            double startZ = (double)(chunkZ * 16 + this.rand.nextInt(16));
+            int tunnelCount = 1;
 
-            if (this.rand.nextInt(4) == 0)
+            if (this.rand.nextInt(GenConfig.ROOM_SPAWN_CHANCE_DENOMINATOR) == 0)
             {
-                this.func_180703_a(this.rand.nextLong(), p_180701_4_, p_180701_5_, chunkPrimerIn, d0, d1, d2);
-                k += this.rand.nextInt(4);
+                this.carveRoom(this.rand.nextLong(), baseChunkX, baseChunkZ, chunkPrimer, startX, startY, startZ);
+                tunnelCount += this.rand.nextInt(GenConfig.MAX_EXTRA_TUNNELS_FROM_ROOM);
             }
 
-            for (int l = 0; l < k; ++l)
+            for (int tunnelIndex = 0; tunnelIndex < tunnelCount; ++tunnelIndex)
             {
-                float f = this.rand.nextFloat() * (float)Math.PI * 2.0F;
-                float f1 = (this.rand.nextFloat() - 0.5F) * 2.0F / 8.0F;
-                float f2 = this.rand.nextFloat() * 2.0F + this.rand.nextFloat();
+                float yaw = this.rand.nextFloat() * (float)Math.PI * 2.0F;
+                float pitch = (this.rand.nextFloat() - 0.5F) * 2.0F / 8.0F;
+                float radius = this.rand.nextFloat() * 2.0F + this.rand.nextFloat();
 
-                if (this.rand.nextInt(10) == 0)
+                if (this.rand.nextInt(GenConfig.LARGE_TUNNEL_CHANCE_DENOMINATOR) == 0)
                 {
-                    f2 *= this.rand.nextFloat() * this.rand.nextFloat() * 3.0F + 1.0F;
+                    radius *= this.rand.nextFloat() * this.rand.nextFloat() * GenConfig.LARGE_TUNNEL_SIZE_MULTIPLIER + 1.0F;
                 }
 
-                this.func_180702_a(this.rand.nextLong(), p_180701_4_, p_180701_5_, chunkPrimerIn, d0, d1, d2, f2, f, f1, 0, 0, 1.0D);
+                this.carveTunnel(this.rand.nextLong(), baseChunkX, baseChunkZ, chunkPrimer, startX, startY, startZ, radius, yaw, pitch, 0, 0, 1.0D);
             }
         }
     }
