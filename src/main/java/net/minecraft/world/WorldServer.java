@@ -751,6 +751,9 @@ public class WorldServer extends World implements IThreadListener
         {
             try
             {
+                // Initialize GenConfig from JSON file
+                net.minecraft.world.gen.GenConfig.initialize();
+                
                 this.createSpawnPosition(settings);
 
                 if (this.worldInfo.getTerrainType() == WorldType.DEBUG_WORLD)

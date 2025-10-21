@@ -6,7 +6,7 @@ import net.minecraft.util.MathHelper;
 
 public class MapGenMineshaft extends MapGenStructure
 {
-    private double field_82673_e = 0.004D;
+    private double mineshaftChance = net.minecraft.world.gen.GenConfig.MINESHAFT_CHANCE;
 
     public MapGenMineshaft()
     {
@@ -23,14 +23,14 @@ public class MapGenMineshaft extends MapGenStructure
         {
             if (((String)entry.getKey()).equals("chance"))
             {
-                this.field_82673_e = MathHelper.parseDoubleWithDefault((String)entry.getValue(), this.field_82673_e);
+                this.mineshaftChance = MathHelper.parseDoubleWithDefault((String)entry.getValue(), this.mineshaftChance);
             }
         }
     }
 
     protected boolean canSpawnStructureAtCoords(int chunkX, int chunkZ)
     {
-        return this.rand.nextDouble() < this.field_82673_e && this.rand.nextInt(80) < Math.max(Math.abs(chunkX), Math.abs(chunkZ));
+        return this.rand.nextDouble() < this.mineshaftChance && this.rand.nextInt(80) < Math.max(Math.abs(chunkX), Math.abs(chunkZ));
     }
 
     protected StructureStart getStructureStart(int chunkX, int chunkZ)

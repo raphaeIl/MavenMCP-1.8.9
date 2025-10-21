@@ -1,0 +1,78 @@
+{
+  "caveGeneration": {
+    "maxCaveCountBase": 200,
+    "caveSpawnChanceDenominator": 3,
+    "roomSpawnChanceDenominator": 4,
+    "maxExtraTunnelsFromRoom": 4,
+    "roomRadiusBase": 1.0,
+    "roomRadiusVariation": 6.0,
+    "roomVerticalScale": 0.5,
+    "tunnelRadiusBase": 1.5,
+    "tunnelRadiusVariationMultiplier": 1.0,
+    "branchRadiusThreshold": 1.0,
+    "branchRadiusBase": 0.5,
+    "branchRadiusVariation": 0.5,
+    "tunnelLengthDivisor": 4,
+    "lavaDepthThreshold": 10,
+    "wideTunnelChanceDenominator": 6,
+    "wideTunnelPitchDecay": 0.92,
+    "normalTunnelPitchDecay": 0.7,
+    "largeTunnelChanceDenominator": 10,
+    "largeTunnelSizeMultiplier": 3.0,
+    "tunnelGenerationChanceDenominator": 4
+  },
+  "yCoordinateBounds": {
+    "minYBound": 1,
+    "maxYBound": 248
+  },
+  "carvingBounds": {
+    "carveBoundsOffset": 16.0,
+    "carveBoundsMultiplier": 2.0,
+    "ellipsoidCarveThreshold": 1.0,
+    "ellipsoidCarveYThreshold": -0.7
+  },
+  "structureSpawnRates": {
+    "villageDistance": 32,
+    "villageMinDistance": 8,
+    "mineshaftChance": 0.004,
+    "dungeonChance": 8,
+    "strongholdDistance": 32
+  },
+  "structureDistanceLimitations": {
+    "scatteredFeatureMaxDistance": 32,
+    "scatteredFeatureMinDistance": 4,
+    "oceanMonumentSpacing": 32,
+    "netherFortressDistance": 16
+  },
+  "biomeRestrictions": {
+    "oceanMonumentAnyBiome": false,
+    "scatteredFeatureAnyBiome": true,
+    "villageAnyBiome": true,
+    "strongholdAnyBiome": true
+  },
+  "structureLimitOverrides": {
+    "removeAllStructureLimits": true,
+    "oceanMonumentNoLimits": false,
+    "scatteredFeatureNoLimits": false,
+    "villageNoLimits": true,
+    "strongholdNoLimits": true,
+    "netherFortressNoLimits": true,
+    "mineshaftNoLimits": true
+  },
+  "yCoordinateOverrides": {
+    "removeYLimits": true,
+    "oceanMonumentNoYLimits": true,
+    "scatteredFeatureNoYLimits": true,
+    "villageNoYLimits": true,
+    "strongholdNoYLimits": true,
+    "netherFortressNoYLimits": true,
+    "mineshaftNoYLimits": true
+  },
+  "customYRange": {
+    "customMinY": 1,
+    "customMaxY": 255
+  },
+  "strongholdBiomeFiltering": {
+    "strongholdMinHeightThreshold": 0.0
+  }
+}

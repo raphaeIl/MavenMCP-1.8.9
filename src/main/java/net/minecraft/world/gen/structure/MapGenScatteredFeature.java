@@ -1,7 +1,6 @@
 package net.minecraft.world.gen.structure;
 
 import com.google.common.collect.Lists;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -14,7 +13,7 @@ import net.minecraft.world.biome.BiomeGenBase;
 
 public class MapGenScatteredFeature extends MapGenStructure
 {
-    private static final List<BiomeGenBase> biomelist = Arrays.<BiomeGenBase>asList(new BiomeGenBase[] {BiomeGenBase.desert, BiomeGenBase.desertHills, BiomeGenBase.jungle, BiomeGenBase.jungleHills, BiomeGenBase.swampland});
+    private static final List<BiomeGenBase> biomelist = net.minecraft.world.gen.GenConfig.SCATTERED_FEATURE_BIOMES;
     private List<BiomeGenBase.SpawnListEntry> scatteredFeatureSpawnList;
 
     /** the maximum distance between scattered features */
@@ -26,8 +25,8 @@ public class MapGenScatteredFeature extends MapGenStructure
     public MapGenScatteredFeature()
     {
         this.scatteredFeatureSpawnList = Lists.<BiomeGenBase.SpawnListEntry>newArrayList();
-        this.maxDistanceBetweenScatteredFeatures = 32;
-        this.minDistanceBetweenScatteredFeatures = 8;
+        this.maxDistanceBetweenScatteredFeatures = net.minecraft.world.gen.GenConfig.SCATTERED_FEATURE_MAX_DISTANCE;
+        this.minDistanceBetweenScatteredFeatures = net.minecraft.world.gen.GenConfig.SCATTERED_FEATURE_MIN_DISTANCE;
         this.scatteredFeatureSpawnList.add(new BiomeGenBase.SpawnListEntry(EntityWitch.class, 1, 1, 1));
     }
 
@@ -74,6 +73,18 @@ public class MapGenScatteredFeature extends MapGenStructure
 
         if (i == k && j == l)
         {
+            // Check if all limits are disabled
+            if (net.minecraft.world.gen.GenConfig.REMOVE_ALL_STRUCTURE_LIMITS || net.minecraft.world.gen.GenConfig.SCATTERED_FEATURE_NO_LIMITS)
+            {
+                return true;  // Allow spawning anywhere with no restrictions
+            }
+            
+            // Check if biome restrictions are disabled
+            if (net.minecraft.world.gen.GenConfig.SCATTERED_FEATURE_ANY_BIOME)
+            {
+                return true;  // Allow spawning in any biome
+            }
+            
             BiomeGenBase biomegenbase = this.worldObj.getWorldChunkManager().getBiomeGenerator(new BlockPos(i * 16 + 8, 0, j * 16 + 8));
 
             if (biomegenbase == null)

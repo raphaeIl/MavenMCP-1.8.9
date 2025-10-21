@@ -118,7 +118,18 @@ public abstract class StructureStart
      */
     protected void markAvailableHeight(World worldIn, Random rand, int p_75067_3_)
     {
-        int i = worldIn.getSeaLevel() - p_75067_3_;
+        int i;
+        
+        // Check if Y limits should be removed
+        if (net.minecraft.world.gen.GenConfig.REMOVE_Y_LIMITS)
+        {
+            i = net.minecraft.world.gen.GenConfig.CUSTOM_MAX_Y - p_75067_3_;
+        }
+        else
+        {
+            i = worldIn.getSeaLevel() - p_75067_3_;
+        }
+        
         int j = this.boundingBox.getYSize() + 1;
 
         if (j < i)

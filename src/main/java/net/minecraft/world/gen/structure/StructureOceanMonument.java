@@ -2,7 +2,6 @@ package net.minecraft.world.gen.structure;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -20,15 +19,15 @@ import net.minecraft.world.biome.BiomeGenBase;
 
 public class StructureOceanMonument extends MapGenStructure
 {
-    private int field_175800_f;
-    private int field_175801_g;
-    public static final List<BiomeGenBase> field_175802_d = Arrays.<BiomeGenBase>asList(new BiomeGenBase[] {BiomeGenBase.ocean, BiomeGenBase.deepOcean, BiomeGenBase.river, BiomeGenBase.frozenOcean, BiomeGenBase.frozenRiver});
+    private int monumentSpacing;
+    private int monumentSeparation;
+    public static final List<BiomeGenBase> field_175802_d = net.minecraft.world.gen.GenConfig.OCEAN_MONUMENT_BIOMES;
     private static final List<BiomeGenBase.SpawnListEntry> field_175803_h = Lists.<BiomeGenBase.SpawnListEntry>newArrayList();
 
     public StructureOceanMonument()
     {
-        this.field_175800_f = 32;
-        this.field_175801_g = 5;
+        this.monumentSpacing = net.minecraft.world.gen.GenConfig.OCEAN_MONUMENT_SPACING;
+        this.monumentSeparation = 5;
     }
 
     public StructureOceanMonument(Map<String, String> p_i45608_1_)
@@ -39,11 +38,11 @@ public class StructureOceanMonument extends MapGenStructure
         {
             if (((String)entry.getKey()).equals("spacing"))
             {
-                this.field_175800_f = MathHelper.parseIntWithDefaultAndMax((String)entry.getValue(), this.field_175800_f, 1);
+                this.monumentSpacing = MathHelper.parseIntWithDefaultAndMax((String)entry.getValue(), this.monumentSpacing, 1);
             }
             else if (((String)entry.getKey()).equals("separation"))
             {
-                this.field_175801_g = MathHelper.parseIntWithDefaultAndMax((String)entry.getValue(), this.field_175801_g, 1);
+                this.monumentSeparation = MathHelper.parseIntWithDefaultAndMax((String)entry.getValue(), this.monumentSeparation, 1);
             }
         }
     }
@@ -60,24 +59,38 @@ public class StructureOceanMonument extends MapGenStructure
 
         if (chunkX < 0)
         {
-            chunkX -= this.field_175800_f - 1;
+            chunkX -= this.monumentSpacing - 1;
         }
 
         if (chunkZ < 0)
         {
-            chunkZ -= this.field_175800_f - 1;
+            chunkZ -= this.monumentSpacing - 1;
         }
 
-        int k = chunkX / this.field_175800_f;
-        int l = chunkZ / this.field_175800_f;
+        int k = chunkX / this.monumentSpacing;
+        int l = chunkZ / this.monumentSpacing;
         Random random = this.worldObj.setRandomSeed(k, l, 10387313);
-        k = k * this.field_175800_f;
-        l = l * this.field_175800_f;
-        k = k + (random.nextInt(this.field_175800_f - this.field_175801_g) + random.nextInt(this.field_175800_f - this.field_175801_g)) / 2;
-        l = l + (random.nextInt(this.field_175800_f - this.field_175801_g) + random.nextInt(this.field_175800_f - this.field_175801_g)) / 2;
+        k = k * this.monumentSpacing;
+        l = l * this.monumentSpacing;
+        // Ensure the bound is positive to prevent IllegalArgumentException
+        int spacingOffset = Math.max(1, this.monumentSpacing - this.monumentSeparation);
+        k = k + (random.nextInt(spacingOffset) + random.nextInt(spacingOffset)) / 2;
+        l = l + (random.nextInt(spacingOffset) + random.nextInt(spacingOffset)) / 2;
 
         if (i == k && j == l)
         {
+            // Check if all limits are disabled
+            if (net.minecraft.world.gen.GenConfig.REMOVE_ALL_STRUCTURE_LIMITS || net.minecraft.world.gen.GenConfig.OCEAN_MONUMENT_NO_LIMITS)
+            {
+                return true;  // Allow spawning anywhere with no restrictions
+            }
+            
+            // Check if biome restrictions are disabled
+            if (net.minecraft.world.gen.GenConfig.OCEAN_MONUMENT_ANY_BIOME)
+            {
+                return true;  // Allow spawning in any biome
+            }
+            
             if (this.worldObj.getWorldChunkManager().getBiomeGenerator(new BlockPos(i * 16 + 8, 64, j * 16 + 8), (BiomeGenBase)null) != BiomeGenBase.deepOcean)
             {
                 return false;

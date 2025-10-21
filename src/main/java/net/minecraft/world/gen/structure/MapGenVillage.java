@@ -1,6 +1,5 @@
 package net.minecraft.world.gen.structure;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -12,17 +11,17 @@ import net.minecraft.world.biome.BiomeGenBase;
 
 public class MapGenVillage extends MapGenStructure
 {
-    public static final List<BiomeGenBase> villageSpawnBiomes = Arrays.<BiomeGenBase>asList(new BiomeGenBase[] {BiomeGenBase.plains, BiomeGenBase.desert, BiomeGenBase.savanna});
+    public static final List<BiomeGenBase> villageSpawnBiomes = net.minecraft.world.gen.GenConfig.VILLAGE_BIOMES;
 
     /** World terrain type, 0 for normal, 1 for flat map */
     private int terrainType;
-    private int field_82665_g;
-    private int field_82666_h;
+    private int villageDistance;
+    private int villageMinDistance;
 
     public MapGenVillage()
     {
-        this.field_82665_g = 32;
-        this.field_82666_h = 8;
+        this.villageDistance = net.minecraft.world.gen.GenConfig.VILLAGE_DISTANCE;
+        this.villageMinDistance = net.minecraft.world.gen.GenConfig.VILLAGE_MIN_DISTANCE;
     }
 
     public MapGenVillage(Map<String, String> p_i2093_1_)
@@ -37,7 +36,7 @@ public class MapGenVillage extends MapGenStructure
             }
             else if (((String)entry.getKey()).equals("distance"))
             {
-                this.field_82665_g = MathHelper.parseIntWithDefaultAndMax((String)entry.getValue(), this.field_82665_g, this.field_82666_h + 1);
+                this.villageDistance = MathHelper.parseIntWithDefaultAndMax((String)entry.getValue(), this.villageDistance, this.villageMinDistance + 1);
             }
         }
     }
@@ -54,24 +53,36 @@ public class MapGenVillage extends MapGenStructure
 
         if (chunkX < 0)
         {
-            chunkX -= this.field_82665_g - 1;
+            chunkX -= this.villageDistance - 1;
         }
 
         if (chunkZ < 0)
         {
-            chunkZ -= this.field_82665_g - 1;
+            chunkZ -= this.villageDistance - 1;
         }
 
-        int k = chunkX / this.field_82665_g;
-        int l = chunkZ / this.field_82665_g;
+        int k = chunkX / this.villageDistance;
+        int l = chunkZ / this.villageDistance;
         Random random = this.worldObj.setRandomSeed(k, l, 10387312);
-        k = k * this.field_82665_g;
-        l = l * this.field_82665_g;
-        k = k + random.nextInt(this.field_82665_g - this.field_82666_h);
-        l = l + random.nextInt(this.field_82665_g - this.field_82666_h);
+        k = k * this.villageDistance;
+        l = l * this.villageDistance;
+        k = k + random.nextInt(this.villageDistance - this.villageMinDistance);
+        l = l + random.nextInt(this.villageDistance - this.villageMinDistance);
 
         if (i == k && j == l)
         {
+            // Check if all limits are disabled
+            if (net.minecraft.world.gen.GenConfig.REMOVE_ALL_STRUCTURE_LIMITS || net.minecraft.world.gen.GenConfig.VILLAGE_NO_LIMITS)
+            {
+                return true;  // Allow spawning anywhere with no restrictions
+            }
+            
+            // Check if biome restrictions are disabled
+            if (net.minecraft.world.gen.GenConfig.VILLAGE_ANY_BIOME)
+            {
+                return true;  // Allow spawning in any biome
+            }
+            
             boolean flag = this.worldObj.getWorldChunkManager().areBiomesViable(i * 16 + 8, j * 16 + 8, 0, villageSpawnBiomes);
 
             if (flag)

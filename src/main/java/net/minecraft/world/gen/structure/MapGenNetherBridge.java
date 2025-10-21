@@ -68,7 +68,15 @@ public class MapGenNetherBridge extends MapGenStructure
             }
 
             this.updateBoundingBox();
-            this.setRandomHeight(worldIn, p_i2040_2_, 48, 70);
+            // Use configurable Y limits
+            if (net.minecraft.world.gen.GenConfig.REMOVE_ALL_STRUCTURE_LIMITS || net.minecraft.world.gen.GenConfig.NETHER_FORTRESS_NO_LIMITS || net.minecraft.world.gen.GenConfig.REMOVE_Y_LIMITS || net.minecraft.world.gen.GenConfig.NETHER_FORTRESS_NO_Y_LIMITS)
+            {
+                this.setRandomHeight(worldIn, p_i2040_2_, net.minecraft.world.gen.GenConfig.CUSTOM_MIN_Y, net.minecraft.world.gen.GenConfig.CUSTOM_MAX_Y);
+            }
+            else
+            {
+                this.setRandomHeight(worldIn, p_i2040_2_, 48, 70);
+            }
         }
     }
 }
