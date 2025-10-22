@@ -7,3 +7,5 @@ test_run/saves/
 test_run/options.txt
 test_run/usercache.json
 test_run/saves/MCP Development World/level.dat
+test_run/crash-reports/
+test_run/versions/1.8.9/1.8.9.jar
